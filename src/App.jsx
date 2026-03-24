@@ -23,6 +23,9 @@ const FLOORS = [
   { id:"t4-b2",  label:"Tower 4 · Basement 2", shortLabel:"T4 · B2", fbKey:"parking-t4-b2", totalSpots:13, spotIds:[189,190,191,192,193,194,195,179,178,177,176,175,174], layoutType:"t4-b2" },
 ];
 
+// Real physical bay numbers for T3-2F display (internal IDs 1-12 → actual signs on wall)
+const BAY_LABELS = { 1:24, 2:23, 3:22, 4:21, 5:12, 6:11, 7:10, 8:9, 9:8, 10:7, 11:6, 12:5 };
+
 const mkSpots = ids => Object.fromEntries(ids.map(id => [id, { id, occupied:false, updatedBy:null, updatedAt:null }]));
 const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; };
 const fmt = iso => iso ? new Date(iso).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : "";
@@ -84,7 +87,7 @@ const BikeBayCell = () => (
 );
 
 // ── Spot Cell ─────────────────────────────────────────────────────────────
-const SpotCell = ({ id, spots, isGuard, onTap, blocked=false, empty=false }) => {
+const SpotCell = ({ id, spots, isGuard, onTap, blocked=false, empty=false, displayLabel=null }) => {
   if (empty) return <div/>;
   if (blocked) return (
     <div style={{ borderRadius:10, minHeight:78, background:"#fff8f0", border:"2px solid #ffcc88", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3 }}>
@@ -93,6 +96,7 @@ const SpotCell = ({ id, spots, isGuard, onTap, blocked=false, empty=false }) => 
     </div>
   );
   const sp=spots?.[id], occ=sp?.occupied;
+  const shownLabel = displayLabel ?? id;
   return (
     <div onClick={() => isGuard && onTap(sp || { id, occupied:false, updatedBy:null, updatedAt:null })}
       style={{ borderRadius:10, minHeight:78, padding:"5px 3px 4px", display:"flex", flexDirection:"column", alignItems:"center",
@@ -101,7 +105,7 @@ const SpotCell = ({ id, spots, isGuard, onTap, blocked=false, empty=false }) => 
         cursor: isGuard ? "pointer" : "default", userSelect:"none", position:"relative", overflow:"hidden",
         boxShadow: occ ? "0 1px 4px rgba(255,59,48,0.1)" : "0 1px 4px rgba(52,199,89,0.1)",
         transition:"border-color 0.2s" }}>
-      <div style={{ fontSize:9, fontWeight:800, color: occ ? "#ff3b3099" : "#34c75999", marginBottom:2 }}>{id}</div>
+      <div style={{ fontSize:9, fontWeight:800, color: occ ? "#ff3b3099" : "#34c75999", marginBottom:2 }}>{shownLabel}</div>
       {occ ? (
         <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2, flex:1, justifyContent:"center" }}>
           <CarSVG/>
@@ -131,7 +135,7 @@ const BottomSheet = ({ spot, onOccupy, onRelease, onClose }) => {
       <div style={{ position:"relative", background:"#fff", borderRadius:"22px 22px 0 0", padding:"10px 0 44px", boxShadow:"0 -4px 32px rgba(0,0,0,0.1)" }} onClick={e => e.stopPropagation()}>
         <div style={{ width:32, height:4, borderRadius:2, background:"#ccc", margin:"0 auto 18px" }}/>
         <div style={{ padding:"0 22px 14px", borderBottom:"1px solid #e5e5ea" }}>
-          <div style={{ fontSize:11, fontWeight:700, color:"#6c6c70", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Bay {spot.id}</div>
+          <div style={{ fontSize:11, fontWeight:700, color:"#6c6c70", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Bay {BAY_LABELS[spot.id] ?? spot.id}</div>
           <div style={{ fontSize:20, fontWeight:800, color:"#000" }}>{occ ? "Currently Occupied" : "Currently Free"}</div>
           {occ && spot.updatedBy && <div style={{ fontSize:13, color:"#6c6c70", marginTop:3 }}>By <b style={{ color:"#000" }}>{spot.updatedBy}</b> at {fmt(spot.updatedAt)}</div>}
         </div>
@@ -151,16 +155,21 @@ const FloorMap = ({ floor, spots, isGuard, onTapSpot }) => {
 
   if (floor.layoutType === "t3-2f") return (
     <div style={card}>
+      <div style={{ fontSize:9, color:"#999", fontWeight:600, marginBottom:8, textAlign:"center" }}>
+        🚲 Grey striped = Bike parking only
+      </div>
+      {/* Row 1: bike,bike,bike,bike | gap | 1(24),2(23),3(22),4(21) */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr 18px 1fr 1fr 1fr 1fr", gap:"5px" }}>
-        {[null,null,null,null].map((_,i) => <SpotCell key={`e${i}`} empty/>)}
-        <div/>
-        {[1,2,3,4].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot}/>)}
+        <BikeBayCell/><BikeBayCell/><BikeBayCell/><BikeBayCell/>
+        <Pillar/>
+        {[1,2,3,4].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot} displayLabel={BAY_LABELS[id]}/>)}
       </div>
       <div style={{ height:1, background:T.border, margin:"7px 0" }}/>
+      {/* Row 2: 12(5),11(6),10(7),9(8) | PILLAR | 8(9),7(10),6(11),5(12) */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr 18px 1fr 1fr 1fr 1fr", gap:"5px", alignItems:"stretch" }}>
-        {[12,11,10,9].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot}/>)}
+        {[12,11,10,9].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot} displayLabel={BAY_LABELS[id]}/>)}
         <Pillar/>
-        {[8,7,6,5].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot}/>)}
+        {[8,7,6,5].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot} displayLabel={BAY_LABELS[id]}/>)}
       </div>
       <div style={{ textAlign:"center", fontSize:8, color:T.sub, marginTop:8, letterSpacing:"1.5px", opacity:0.5 }}>▲ ENTRY / EXIT</div>
     </div>
@@ -270,7 +279,7 @@ export default function App() {
     const updated = { ...spots, [id]: { ...spots[id], occupied:true, updatedBy:guardName, updatedAt:new Date().toISOString() } };
     setFloorData(p => ({ ...p, [floor.fbKey]: updated }));
     await set(ref(db, floor.fbKey), { spots: updated, _date: todayKey() });
-    showToast(`Bay ${id} — Occupied`, "#ff3b30");
+    showToast(`Bay ${BAY_LABELS[id] ?? id} — Occupied`, "#ff3b30");
   };
 
   const release = async id => {
@@ -278,7 +287,7 @@ export default function App() {
     const updated = { ...spots, [id]: { ...spots[id], occupied:false, updatedBy:guardName, updatedAt:new Date().toISOString() } };
     setFloorData(p => ({ ...p, [floor.fbKey]: updated }));
     await set(ref(db, floor.fbKey), { spots: updated, _date: todayKey() });
-    showToast(`Bay ${id} — Released`, "#34c759");
+    showToast(`Bay ${BAY_LABELS[id] ?? id} — Released`, "#34c759");
   };
 
   const handleLogin = () => {
