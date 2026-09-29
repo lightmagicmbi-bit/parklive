@@ -20,7 +20,7 @@ const checkAuth = p => p === _a;
 const FLOORS = [
   { id:"t3-2f",  label:"Tower 3 · 2nd Floor",  shortLabel:"T3 · 2F", fbKey:"parking",       totalSpots:12, spotIds:[1,2,3,4,5,6,7,8,9,10,11,12],                         layoutType:"t3-2f" },
   { id:"t4-b1",  label:"Tower 4 · Basement 1", shortLabel:"T4 · B1", fbKey:"parking-t4-b1", totalSpots:5,  spotIds:[211,210,209,208,207],                                 layoutType:"t4-b1" },
-  { id:"t4-b2",  label:"Tower 4 · Basement 2", shortLabel:"T4 · B2", fbKey:"parking-t4-b2", totalSpots:13, spotIds:[189,190,191,192,193,194,195,179,178,177,176,175,174], layoutType:"t4-b2" },
+  { id:"t4-b2",  label:"Tower 4 · Basement 2", shortLabel:"T4 · B2", fbKey:"parking-t4-b2", totalSpots:15, spotIds:[188,189,190,191,192,193,194,195,180,179,178,177,176,175,174,173], layoutType:"t4-b2" },
 ];
 
 // Real physical bay numbers for T3-2F display (internal IDs 1-12 → actual signs on wall)
@@ -197,7 +197,9 @@ const FloorMap = ({ floor, spots, isGuard, onTapSpot }) => {
 
   if (floor.layoutType === "t4-b2") return (
     <div style={{ ...card, padding:"12px 6px" }}>
-      <div style={{ display:"grid", gridTemplateColumns:"18px 1fr 1fr 1fr 18px 1fr 1fr 1fr 1fr 18px", gap:"4px", alignItems:"stretch" }}>
+      {/* Row 1: 188 | P64 | 189,190,191 | P65 | 192,193,194,195 | P66 */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 18px 1fr 1fr 1fr 18px 1fr 1fr 1fr 1fr 18px", gap:"4px", alignItems:"stretch" }}>
+        <SpotCell id={188} spots={spots} isGuard={isGuard} onTap={onTapSpot}/>
         <Pillar num={64}/>
         {[189,190,191].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot}/>)}
         <Pillar num={65}/>
@@ -205,12 +207,13 @@ const FloorMap = ({ floor, spots, isGuard, onTapSpot }) => {
         <Pillar num={66}/>
       </div>
       <div style={{ height:1, background:T.border, margin:"5px 0" }}/>
-      <div style={{ display:"grid", gridTemplateColumns:"18px 1fr 1fr 1fr 18px 1fr 1fr 1fr 1fr 18px", gap:"4px", alignItems:"stretch" }}>
+      {/* Row 2: 180 | P61 | 179,178,177 | P60 | 176,175,174,173 | P59 */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 18px 1fr 1fr 1fr 18px 1fr 1fr 1fr 1fr 18px", gap:"4px", alignItems:"stretch" }}>
+        <SpotCell id={180} spots={spots} isGuard={isGuard} onTap={onTapSpot}/>
         <Pillar num={61}/>
         {[179,178,177].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot}/>)}
         <Pillar num={60}/>
-        {[176,175,174].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot}/>)}
-        <SpotCell blocked/>
+        {[176,175,174,173].map(id => <SpotCell key={id} id={id} spots={spots} isGuard={isGuard} onTap={onTapSpot}/>)}
         <Pillar num={59}/>
       </div>
       <div style={{ textAlign:"center", fontSize:8, color:T.sub, marginTop:8, letterSpacing:"1.5px", opacity:0.5 }}>▲ ENTRY / EXIT</div>
